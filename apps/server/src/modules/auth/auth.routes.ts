@@ -22,7 +22,7 @@ const router = Router();
 router.post('/register', authLimiter, registerHandler);
 router.post('/login', authLimiter, loginHandler);
 router.post('/refresh', authLimiter, refreshHandler);
-router.post('/logout', logoutHandler);
+router.post('/logout', authLimiter, logoutHandler);
 router.get('/me', authenticateJWT, meHandler);
 
 export default router;
