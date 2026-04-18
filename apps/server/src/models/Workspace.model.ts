@@ -17,6 +17,8 @@ function slugify(text: string): string {
 
 export type WorkspaceRole = 'owner' | 'editor' | 'viewer';
 
+const WORKSPACE_ROLES: WorkspaceRole[] = ['owner', 'editor', 'viewer'];
+
 export interface IWorkspaceMember {
   user: Types.ObjectId;
   role: WorkspaceRole;
@@ -40,7 +42,7 @@ const workspaceMemberSchema = new Schema<IWorkspaceMember>(
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     role: {
       type: String,
-      enum: ['owner', 'editor', 'viewer'] satisfies WorkspaceRole[],
+      enum: WORKSPACE_ROLES,
       required: true,
     },
   },

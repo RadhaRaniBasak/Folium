@@ -1,5 +1,18 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
+// ─── Slug helper ──────────────────────────────────────────────────────────────
+
+function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /**
@@ -52,5 +65,27 @@ pageSchema.index({ workspace: 1 });
 
 // Efficient look-up of child pages
 pageSchema.index({ parent: 1 });
+
+// Auto-generate slug from title before saving, unique within the same workspace
+pageSchema.pre('save', async function (next) {
+  if (!this.isModified('title') && this.slug) {
+    return next();
+  }
+
+  const base = slugify(this.title);
+  let slug = base;
+  let suffix = 1;
+
+  // Ensure uniqueness within the workspace
+  while (
+    await Page.exists({ workspace: this.workspace, slug, _id: { $ne: this._id } })
+  ) {
+    slug = `${base}-${suffix}`;
+    suffix += 1;
+  }
+
+  this.slug = slug;
+  next();
+});
 
 export const Page = model<IPage>('Page', pageSchema);
