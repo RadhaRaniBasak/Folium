@@ -47,7 +47,7 @@ npm run dev
 Visit:
 - Client → http://localhost:5173
 - Server → http://localhost:3001
-- Health  → http://localhost:3001/health
+- Health  → http://localhost:3001/api/health
 
 ### 3. Build
 

@@ -10,7 +10,7 @@ import {
 } from './auth.controller';
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000, // 15-minute rate-limit window
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
@@ -18,7 +18,7 @@ const authLimiter = rateLimit({
 });
 
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000, // 15-minute rate-limit window
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
