@@ -14,7 +14,7 @@ export async function registerHandler(
       password?: string;
     };
     if (!name || !email || !password) {
-      throw new AppError('name, email and password are required', 400);
+      throw new AppError('name, email, and password are required', 400);
     }
 
     const result = await authService.register(name, email, password);
