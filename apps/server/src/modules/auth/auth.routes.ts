@@ -17,12 +17,20 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+});
+
 const router = Router();
 
 router.post('/register', authLimiter, registerHandler);
 router.post('/login', authLimiter, loginHandler);
 router.post('/refresh', authLimiter, refreshHandler);
 router.post('/logout', authLimiter, logoutHandler);
-router.get('/me', authenticateJWT, meHandler);
+router.get('/me', apiLimiter, authenticateJWT, meHandler);
 
 export default router;
