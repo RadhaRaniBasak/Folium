@@ -8,7 +8,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Health check route
 app.get(ROUTES.HEALTH, (_req, res) => {
   const response: ApiResponse<HealthResponse> = {
     success: true,
@@ -21,7 +20,6 @@ app.get(ROUTES.HEALTH, (_req, res) => {
   res.status(HTTP_STATUS.OK).json(response);
 });
 
-// Root route
 app.get('/', (_req, res) => {
   const response: ApiResponse<{ message: string }> = {
     success: true,
