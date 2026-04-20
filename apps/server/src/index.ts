@@ -1,4 +1,5 @@
-import express from 'express';
+// The production entrypoint is src/server.ts which uses createApp() from src/app.ts.
+// Do not import or run this file directly.import express from 'express';( kept for reference only and is NOT used in production.)
 import cors from 'cors';
 import { APP_NAME, DEFAULT_PORT, ROUTES, HTTP_STATUS } from '@repo/shared';
 import type { HealthResponse, ApiResponse } from '@repo/shared';
