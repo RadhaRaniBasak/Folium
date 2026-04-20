@@ -105,3 +105,63 @@ import type { HealthResponse } from '@shared/types';
 | Linting | ESLint 9 (flat config) + `@typescript-eslint` |
 | Formatting | Prettier 3 |
 | Package manager | npm workspaces |
+
+---
+
+## Deploying: Vercel (client) + Render (server)
+
+This project supports a **double-deploy** setup: the React client on **Vercel** and the Express server on **Render**.
+
+### Server → Render
+
+1. Create a new **Web Service** on [Render](https://render.com) pointing at this repo.
+2. Set the following in Render's service settings:
+
+   | Setting | Value |
+   |---|---|
+   | **Build Command** | `npm install && npm run build --workspace=apps/server` |
+   | **Start Command** | `npm run start --workspace=apps/server` |
+
+3. Add these **Environment Variables** in the Render dashboard (all required):
+
+   | Variable | Value |
+   |---|---|
+   | `NODE_ENV` | `production` |
+   | `MONGO_URI` | MongoDB Atlas connection string (`mongodb+srv://...`) |
+   | `REDIS_URL` | Render Redis or Upstash URL (`redis://...` or `rediss://...`) |
+   | `JWT_SECRET` | Secure random string ≥ 32 chars (`openssl rand -hex 32`) |
+   | `JWT_REFRESH_SECRET` | Different secure random string ≥ 32 chars |
+   | `CLIENT_URL` | Your Vercel frontend URL, e.g. `https://folium.vercel.app` |
+
+   > **Note:** `PORT` is set automatically by Render — do **not** add it manually.
+
+### Client → Vercel
+
+1. Import the repo into [Vercel](https://vercel.com).
+2. In Vercel project settings, set **Root Directory** to `apps/client`.
+3. Leave build settings as defaults (`npm run build`, output `dist`).
+4. **Update `apps/client/vercel.json`** — replace the placeholder destination with your actual Render URL:
+
+   ```json
+   {
+     "rewrites": [
+       {
+         "source": "/api/(.*)",
+         "destination": "https://<your-render-service>.onrender.com/api/$1"
+       }
+     ]
+   }
+   ```
+
+   This rewrite forwards all `/api/*` requests from the Vercel-hosted client to the Render server, so no code changes are needed for API calls.
+
+5. Also set `CLIENT_URL` on Render to match your Vercel domain (required for CORS).
+
+### Health check
+
+Once both are deployed, verify the server is running:
+
+```
+GET https://<your-render-service>.onrender.com/api/health
+```
+
