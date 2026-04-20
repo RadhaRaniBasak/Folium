@@ -1,25 +1,12 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import mongoose from 'mongoose';
+import { env } from './env';
 
-export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@shared': resolve(__dirname, '../../packages/shared/src'),
-    },
-  },
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-      '/health': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-      },
-    },
-  },
-});
+export async function connectDB(): Promise<void> {
+  try {
+    await mongoose.connect(env.MONGO_URI);
+    console.log('✅ MongoDB connected');
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
+    throw err;
+  }
+}
