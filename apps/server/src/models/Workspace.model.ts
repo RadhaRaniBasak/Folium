@@ -75,4 +75,4 @@ workspaceSchema.pre('save', async function (next) {
   next();
 });
 
-export const Workspace = model<IWorkspace>('Workspace',
+export const Workspace = model<IWorkspace>('Workspace', workspaceSchema);

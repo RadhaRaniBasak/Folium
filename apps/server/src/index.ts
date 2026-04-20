@@ -1,3 +1,6 @@
+// LEGACY: This file is kept for reference only and is NOT used in production.
+// The production entrypoint is src/server.ts which uses createApp() from src/app.ts.
+// Do not import or run this file directly.
 import express from 'express';
 import cors from 'cors';
 import { APP_NAME, DEFAULT_PORT, ROUTES, HTTP_STATUS } from '@repo/shared';
