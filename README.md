@@ -2,7 +2,7 @@
 
 A **full-stack, multi-user Notion-like backend + frontend monorepo** built with **TypeScript** using **npm workspaces**.
 
-- **Client:** React + Vite (port `5173`)
+
 - **Server:** Express + TypeScript (port `3001`)
 - **Database:** MongoDB (Mongoose)
 - **Cache:** Redis
