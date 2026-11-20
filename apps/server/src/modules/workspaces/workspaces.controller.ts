@@ -39,10 +39,17 @@ export async function getWorkspaceHandler(req: Request, res: Response, next: Nex
 export async function addMemberHandler(req: Request, res: Response, next: NextFunction) {
   try {
     const { workspaceId } = req.params as { workspaceId: string };
-    const { userId, role } = req.body as { userId?: string; role?: 'owner' | 'editor' | 'viewer' };
-    if (!userId || !role) throw new AppError('userId and role are required', 400);
+    const { userId, email, role } = req.body as {
+      userId?: string;
+      email?: string;
+      role?: 'owner' | 'editor' | 'viewer';
+    };
+    if ((!userId && !email) || !role)
+      throw new AppError('email (or userId) and role are required', 400);
+    if (!['owner', 'editor', 'viewer'].includes(role)) throw new AppError('Invalid role', 400);
 
-    const workspace = await service.addMember(workspaceId, userId, role);
+    const targetId = userId ?? (await service.findUserIdByEmail(email!));
+    const workspace = await service.addMember(workspaceId, targetId, role);
     res.status(200).json({ success: true, data: { workspace } });
   } catch (err) {
     next(err);

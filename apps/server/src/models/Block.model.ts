@@ -1,17 +1,7 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
-export type BlockType =
-  | 'paragraph'
-  | 'heading_1'
-  | 'heading_2'
-  | 'heading_3'
-  | 'todo'
-  | 'bulleted_list_item'
-  | 'numbered_list_item'
-  | 'quote'
-  | 'code'
-  | 'divider'
-  | 'image';
+/** BlockNote block type: paragraph, heading, checkListItem, toggleListItem, table, image, … */
+export type BlockType = string;
 
 export interface IBlock extends Document {
   workspace: Types.ObjectId;

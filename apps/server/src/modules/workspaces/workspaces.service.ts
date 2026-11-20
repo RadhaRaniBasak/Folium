@@ -23,7 +23,13 @@ export async function listMyWorkspaces(userId: string) {
 
 export async function getWorkspaceById(workspaceId: string) {
   if (!Types.ObjectId.isValid(workspaceId)) throw new AppError('Invalid workspaceId', 400);
-  return Workspace.findById(workspaceId);
+  return Workspace.findById(workspaceId).populate('members.user', 'name email avatar');
+}
+
+export async function findUserIdByEmail(email: string): Promise<string> {
+  const user = await User.findOne({ email: email.toLowerCase().trim() }).select('_id');
+  if (!user) throw new AppError('No Folium account uses that email yet', 404);
+  return String(user._id);
 }
 
 export async function addMember(workspaceId: string, userId: string, role: WorkspaceRole) {

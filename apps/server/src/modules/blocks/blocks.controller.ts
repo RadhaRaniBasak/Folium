@@ -31,6 +31,19 @@ export async function createBlockHandler(req: Request, res: Response, next: Next
   }
 }
 
+export async function replaceBlocksHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) throw new AppError('Unauthorized', 401);
+    const { pageId } = req.params as { pageId: string };
+    const { blocks } = (req.body ?? {}) as { blocks?: unknown };
+
+    const result = await service.replaceBlocks(req.user.userId, pageId, blocks);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function listBlocksHandler(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.user) throw new AppError('Unauthorized', 401);

@@ -1,15 +1,18 @@
+import http from 'http';
 import { env } from './config/env';
 import { connectDB } from './config/db';
 import { connectRedis } from './config/redis';
 import { createApp } from './app';
+import { attachCollab } from './realtime/collab';
 
 async function start(): Promise<void> {
   await connectDB();
   await connectRedis();
 
-  const app = createApp();
+  const server = http.createServer(createApp());
+  attachCollab(server);
 
-  app.listen(env.PORT, () => {
+  server.listen(env.PORT, () => {
     console.log(`🚀 Folium server running on http://localhost:${env.PORT}`);
     console.log(`   Health: http://localhost:${env.PORT}/api/health`);
   });
