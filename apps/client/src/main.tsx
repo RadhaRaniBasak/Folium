@@ -1,5 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import '@blocknote/core/fonts/inter.css';
+import '@blocknote/mantine/style.css';
+import './main.css';
 import App from './App';
 
 const root = document.getElementById('root');

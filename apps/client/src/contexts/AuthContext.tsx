@@ -1,22 +1,18 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User, LoginInput, RegisterInput } from '@shared/types';
 import {
   apiLogin,
   apiLogout,
-  apiRefresh,
+  apiMe,
   apiRegister,
   clearRefreshToken,
   loadRefreshToken,
+  onSessionExpired,
+  refreshSession,
   setAccessToken,
   storeRefreshToken,
 } from '../lib/api';
+import { closeSocket } from '../lib/socket';
 
 interface AuthContextValue {
   user: User | null;
@@ -33,42 +29,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // On mount, try to restore session from stored refresh token
+  // On mount, try to restore the session from the stored refresh token.
   useEffect(() => {
-    const storedRefreshToken = loadRefreshToken();
-    if (!storedRefreshToken) {
+    onSessionExpired(() => {
+      closeSocket();
+      setUser(null);
+    });
+
+    if (!loadRefreshToken()) {
       setIsLoading(false);
       return;
     }
+    refreshSession()
+      .then((token) => (token ? apiMe() : null))
+      .then((me) => setUser(me))
+      .catch(() => clearRefreshToken())
+      .finally(() => setIsLoading(false));
 
-    apiRefresh(storedRefreshToken)
-      .then((res) => {
-        if (res.success && res.data) {
-          setAccessToken(res.data.accessToken);
-          storeRefreshToken(res.data.refreshToken);
-          // Fetch user info with the new access token
-          return fetch('/api/auth/me', {
-            headers: { Authorization: `Bearer ${res.data.accessToken}` },
-          }).then((r) => {
-            if (!r.ok) throw new Error('Failed to fetch user');
-            return r.json() as Promise<{ success: boolean; data?: { user: User } }>;
-          });
-        }
-        return null;
-      })
-      .then((meRes) => {
-        if (meRes?.success && meRes.data?.user) {
-          setUser(meRes.data.user);
-        } else {
-          clearRefreshToken();
-        }
-      })
-      .catch(() => {
-        clearRefreshToken();
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    return () => onSessionExpired(null);
   }, []);
 
   const login = useCallback(async (input: LoginInput) => {
@@ -93,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     const storedRefreshToken = loadRefreshToken();
+    closeSocket();
     setUser(null);
     setAccessToken(null);
     clearRefreshToken();

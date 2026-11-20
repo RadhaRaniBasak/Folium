@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       '@shared': resolve(__dirname, '../../packages/shared/src'),
@@ -19,6 +20,12 @@ export default defineConfig({
       '/health': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+      },
+      // Real-time collaboration (Socket.io, incl. the websocket upgrade)
+      '/socket.io': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        ws: true,
       },
     },
   },
