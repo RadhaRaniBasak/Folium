@@ -23,6 +23,8 @@ export default [
     rules: {
       ...tsPlugin.configs["recommended"].rules,
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      // TypeScript already checks undefined names (and knows Node/DOM globals).
+      "no-undef": "off",
     },
   },
   {
@@ -49,6 +51,9 @@ export default [
       ...reactHooksPlugin.configs.recommended.rules,
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "react/react-in-jsx-scope": "off",
+      // Types replace prop-types; TypeScript checks undefined names.
+      "react/prop-types": "off",
+      "no-undef": "off",
     },
   },
 ];
