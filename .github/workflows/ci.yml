@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      mongo:
+        image: mongo:7
+        ports: ['27017:27017']
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+
+    env:
+      NODE_ENV: development
+      PORT: 3001
+      MONGO_URI: mongodb://localhost:27017/folium_ci
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-only-jwt-secret-0123456789abcdef
+      JWT_REFRESH_SECRET: ci-only-refresh-secret-0123456789abcdef
+      CLIENT_URL: http://localhost:5173
+      AUTH_RATE_LIMIT: 200
+      API_RATE_LIMIT: 2000
+      CHROME_PATH: /usr/bin/google-chrome
+      E2E_SCREENSHOTS: e2e/screenshots
+      # Push and WhatsApp go to a mock the smoke test runs on this port.
+      MOCK_PORT: 4010
+      PUSH_ALLOWED_HOSTS: localhost:4010
+      WHATSAPP_TOKEN: ci-test
+      WHATSAPP_PHONE_ID: '1234567890'
+      WHATSAPP_API_URL: http://localhost:4010/whatsapp
+      # Automatic versions every 2 s instead of 10 min, so the smoke test can see one.
+      VERSION_INTERVAL: 2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Throwaway VAPID keys for push
+        working-directory: apps/server
+        run: >-
+          node -e "const k = require('web-push').generateVAPIDKeys();
+          console.log('VAPID_PUBLIC_KEY=' + k.publicKey + '\nVAPID_PRIVATE_KEY=' + k.privateKey)"
+          >> "$GITHUB_ENV"
+
+      - name: Lint
+        run: npx eslint apps/client/src apps/server/src
+
+      - name: Typecheck
+        run: |
+          npx tsc --noEmit -p apps/server/tsconfig.json
+          npx tsc --noEmit -p apps/client/tsconfig.json
+
+      - name: Unit checks (reminder parser and schedule)
+        run: npm test
+
+      - name: Build client
+        run: npm run build --workspace=apps/client
+
+      - name: Start API, dev server and production preview
+        run: |
+          (cd apps/server && npx tsx src/server.ts > /tmp/api.log 2>&1 &)
+          (cd apps/client && npx vite --port 5173 --strictPort > /tmp/vite.log 2>&1 &)
+          (cd apps/client && npx vite preview --port 4173 --strictPort > /tmp/preview.log 2>&1 &)
+          for i in $(seq 1 60); do
+            curl -sf localhost:3001/api/health > /dev/null && curl -sf localhost:5173 > /dev/null && curl -sf localhost:4173 > /dev/null && exit 0
+            sleep 1
+          done
+          echo "services did not start"; cat /tmp/api.log; exit 1
+
+      - name: API smoke test
+        run: npm run smoke --workspace=apps/server
+
+      - name: Browser tests
+        run: npm run e2e
+
+      - name: Offline-first test (production build)
+        run: npm run e2e:offline
+        env:
+          E2E_URL: http://localhost:4173
+
+      - name: Upload screenshots and logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-debug
+          path: |
+            e2e/screenshots
+            /tmp/*.log
